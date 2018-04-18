@@ -7,19 +7,19 @@
          <span slot="prepend">规格名</span>
       </i-input>
       <div class="list">
-        <i-input @on-blur="inputBlur(index,i,$event)" icon="ios-clock-outline" @on-click="removeGroup(index,i)" placeholder="规格值" v-model.lazy="item.list[i]" size="large" v-for="(data,i) in item.list" :key="i" style="width:200px;">
+        <i-input @on-blur="inputBlur(index,i,$event)" icon="close" @on-click="removeGroup(index,i)" placeholder="规格值" v-model.lazy="item.list[i]" size="large" v-for="(data,i) in item.list" :key="i" style="width:200px;">
           </i-input>        
         <i-btn type="ghost" @click="addLine(index)">添加</i-btn>
       </div>
     </div>
     <i-btn type="info" @click="addGroup">添加规格</i-btn>
-    <i-table :columns="columns1" :data="formatData"></i-table>
+    <i-table :loading="loading" :columns="columns1" :data="formatData"></i-table>
 
   </div>
 </template>
 <script>
 import { Input, Button, Table } from "iview";
-import { combine } from "./utils/utils";
+import { combine, formatData } from "./utils/utils";
 export default {
   name: "App",
   components: {
@@ -37,9 +37,9 @@ export default {
         {
           name: "尺寸",
           list: ["2.2", "2.3", "2.4"]
-        },
-    
-      ]
+        }
+      ],
+      loading:false
     };
   },
   computed: {
@@ -58,14 +58,13 @@ export default {
                 },
                 domProps: {
                   value: this.formatData[params.index]["库存"],
-                  disabled:false,
+                  disabled: this.formatData[params.index].lock
                 },
                 class: "ivu-input ivu-input-large",
-                
+
                 on: {
                   input: function(event) {
-                    _this.formatData[params.index]["库存"] =
-                      event.target.value;
+                    _this.formatData[params.index]["库存"] = event.target.value;
                   }
                 }
               })
@@ -84,13 +83,13 @@ export default {
                   type: "text"
                 },
                 domProps: {
-                  value: this.formatData[params.index]["销量"]
+                  value: this.formatData[params.index]["销量"],
+                  disabled: this.formatData[params.index].lock
                 },
                 class: "ivu-input ivu-input-large",
                 on: {
                   input: function(event) {
-                    _this.formatData[params.index]["销量"] =
-                      event.target.value;
+                    _this.formatData[params.index]["销量"] = event.target.value;
                   }
                 }
               })
@@ -108,7 +107,8 @@ export default {
                   type: "text"
                 },
                 domProps: {
-                  value: this.formatData[params.index]["规格编码"]
+                  value: this.formatData[params.index]["规格编码"],
+                  disabled: this.formatData[params.index].lock
                 },
                 class: "ivu-input ivu-input-large",
                 on: {
@@ -132,7 +132,8 @@ export default {
                   type: "text"
                 },
                 domProps: {
-                  value: this.formatData[params.index]["成本价"]
+                  value: this.formatData[params.index]["成本价"],
+                  disabled: this.formatData[params.index].lock
                 },
                 class: "ivu-input ivu-input-large",
                 on: {
@@ -142,6 +143,35 @@ export default {
                   }
                 }
               })
+            ]);
+          }
+        },
+        {
+          title: "操作",
+          key: "操作",
+          render: (h, params) => {
+            return h("div", [
+              h(
+                "Button",
+                {
+                  props: {
+                    type: "primary",
+                    size: "small"
+                  },
+                  style: {
+                    marginRight: "5px"
+                  },
+                  class: "ivu-btn ivu-btn-primary ivu-btn-small",
+                  on: {
+                    click: () => {
+                      // this.$set(this.formatData[params.index],'lock',true)
+                      // this.formatData.pop();
+
+                    }
+                  }
+                },
+                "禁用"
+              )
             ]);
           }
         }
@@ -171,6 +201,7 @@ export default {
           obj["销量"] = 0;
           obj["规格编码"] = 0;
           obj["成本价"] = 0;
+          obj["lock"] =( Math.random()*100 - 50) > 0;
         }
         newObjArr.push(obj);
       }
@@ -182,9 +213,9 @@ export default {
       // this.dataList.push({});
       this.dataList[i].list.push("");
     },
-    inputBlur(index,i,e){
-      if(!this.dataList[index].list[i]){
-         this.dataList[index].list.splice(i,1);
+    inputBlur(index, i, e) {
+      if (!this.dataList[index].list[i]) {
+        this.dataList[index].list.splice(i, 1);
       }
     },
     addGroup() {
